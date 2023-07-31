@@ -2,7 +2,7 @@
 
 import openai
 import streamlit as st
-from openai.error import AuthenticationError
+from openai.error import AuthenticationError, InvalidRequestError
 
 
 APP_TITLE = "Tekosu"
@@ -29,13 +29,15 @@ openai.api_key = st.sidebar.text_input(
     autocomplete="current-password",
 )
 
+error = st.container()
+
 try:
   openai_models = [model["id"] for model in openai.Model.list()["data"]]  # type: ignore
 except AuthenticationError as e:
   openai_models = []
 
   if openai.api_key:
-    st.error(e)
+    error.error(e)
 
 CHAT_MODELS = ["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"]
 
@@ -78,24 +80,29 @@ def translate(text: str) -> str:
   if not text.strip():
     return ""
 
-  response = openai.ChatCompletion.create(
-      model=openai_model,
-      temperature=temperature if not use_top_p else None,
-      top_p=top_p if use_top_p else None,
-      messages=[
-          {
-             "role": "user",
-             "content": f"""
-Summarize the following terms and conditions, highlighting key clauses.
+  try:
+    response = openai.ChatCompletion.create(
+        model=openai_model,
+        temperature=temperature if not use_top_p else None,
+        top_p=top_p if use_top_p else None,
+        messages=[
+            {
+              "role": "user",
+              "content": f"""
+  Summarize the following terms and conditions, highlighting key clauses.
 
-```
-{legalese}
-""",
-          }
-      ],
-  )
+  ```
+  {legalese}
+  """,
+            }
+        ],
+    )
 
-  return response["choices"][0]["message"]["content"]  # type: ignore
+    return response["choices"][0]["message"]["content"]  # type: ignore
+  except InvalidRequestError as invalid_request:
+    error.error(invalid_request)
+
+    return ""
 
 
 st.title(APP_TITLE)
