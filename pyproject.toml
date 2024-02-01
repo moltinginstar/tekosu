@@ -2,7 +2,7 @@
 name = "tekosu"
 version = "1.0.0"
 description = "Terms and conditions made easy—unravel the fine print in just a few keystrokes."
-authors = ["Samvel Davtyan <samvelxdavtyan@gmail.com>"]
+authors = ["Sam D <samvelxdavtyan@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
